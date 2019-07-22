@@ -2,6 +2,7 @@ DOCTYPE = DMTR
 DOCNUMBER = 151
 DOCNAME = $(DOCTYPE)-$(DOCNUMBER)
 JOBNAME = $(DOCNAME)
+TEX = $(filter-out $(wildcard *acronyms.tex) , $(wildcard *.tex))
 
 #export TEXMFHOME = lsst-texmf/texmf
 
@@ -13,7 +14,7 @@ ifneq "$(GITSTATUS)" ""
 	GITDIRTY = -dirty
 endif
 
-$(JOBNAME).pdf: $(DOCNAME).tex meta.tex
+$(JOBNAME).pdf: $(DOCNAME).tex meta.tex acronyms.tex
 	xelatex -jobname=$(JOBNAME) $(DOCNAME)
 	bibtex $(JOBNAME)
 	xelatex -jobname=$(JOBNAME) $(DOCNAME)
@@ -30,6 +31,18 @@ meta.tex: Makefile .FORCE
 	/bin/echo '\newcommand{\lsstDocNum}{$(DOCNUMBER)}' >>$@
 	/bin/echo '\newcommand{\vcsrevision}{$(GITVERSION)$(GITDIRTY)}' >>$@
 	/bin/echo '\newcommand{\vcsdate}{$(GITDATE)}' >>$@
+
+
+#Traditional acronyms are better in this document
+acronyms.tex : ${TEX} myacronyms.txt skipacronyms.txt
+	echo ${TEXMFHOME}
+	python3 ${TEXMFHOME}/../bin/generateAcronyms.py -t "DM"    $(TEX)
+
+myacronyms.txt :
+	touch myacronyms.txt
+
+skipacronyms.txt :
+	touch skipacronyms.txt
 
 clean :
 	latexmk -c
